@@ -154,6 +154,7 @@ model = AutoModel(model="iic/SenseVoiceSmall",
 #                  vad_model="iic/speech_fsmn_vad_zh-cn-16k-common-pytorch",
 #                  vad_kwargs={"max_single_segment_time": 30000},
                   trust_remote_code=True,
+                  remote_code="./SenseVoice-model.py",
                   )
 
 
@@ -205,9 +206,11 @@ async def transcribe_audio(file: UploadFile = File(...)):
         file.file.seek(0)
         file_content = await file.read()
 
-        print(f"[DEBUG] UploadFile Object is {file}")
-        # Check the file format by its header
-        if file.content_type.startswith('audio/wav'):
+        print(f"[DEBUG] UploadFile Object is {file}, content_type: {file.content_type}")
+
+        # Check the file format by its header, or suffix with 'wav' 
+        suffix = file.filename.split(".")[-1]
+        if suffix in ["wav"] or file.content_type.startswith('audio/wav'):
             #suffix = "wav"
             # Use soundfile to load audio and ensure it's int16
             input_wav, sr = sf.read(io.BytesIO(file_content), dtype=np.int16)
@@ -279,4 +282,6 @@ if __name__ == "__main__":
     parser.add_argument('--keyfile', type=str, default='path_to_your_keyfile', help='SSL key file')
     args = parser.parse_args()
     
-    uvicorn.run(app, host="0.0.0.0", port=args.port, ssl_certfile=args.certfile, ssl_keyfile=args.keyfile)
+    uvicorn.run(app, host="0.0.0.0", port=args.port)
+    #uvicorn.run(app, host="0.0.0.0", port=args.port, ssl_certfile=args.certfile, ssl_keyfile=args.keyfile)
+    
